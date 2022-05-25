@@ -1,5 +1,6 @@
 package com.safecrack.proxy
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
@@ -25,15 +26,22 @@ class ProxyEndpoint(
     @Throws(URISyntaxException::class)
     fun proxy(
         @RequestBody body: String?,
-        @RequestParam requestParams: Map<String, String>,
+        @RequestParam params: Map<String, String>,
         @RequestHeader headers: MultiValueMap<String, String>,
         method: HttpMethod,
         request: HttpServletRequest
     ): ResponseEntity<String> {
         val uri = URI("http", null, server, port, request.requestURI, request.queryString, null)
+        log.info("Headers: $headers")
+        log.info("Request Params: $params")
+        log.info("Request Body: $body")
         return restTemplate.exchange(
-            uri, method, body?.let { HttpEntity(body) },
+            uri, method, body?.let { HttpEntity(body, headers) } ?: HttpEntity<String>(headers),
             String::class.java
         )
+    }
+
+    companion object {
+        val log = LoggerFactory.getLogger(this.javaClass)
     }
 }
